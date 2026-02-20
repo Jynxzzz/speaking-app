@@ -1,0 +1,518 @@
+/* ─── Reset & Base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --primary: #2563eb;
+  --primary-light: #dbeafe;
+  --accent: #f59e0b;
+  --accent-light: #fef3c7;
+  --success: #10b981;
+  --success-light: #d1fae5;
+  --danger: #ef4444;
+  --danger-light: #fee2e2;
+  --border: #e2e8f0;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.12);
+  /* Safe area for iPhone notch */
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: calc(80px + var(--sab));
+}
+
+/* ─── Header ─── */
+#header {
+  background: var(--surface);
+  padding: calc(var(--sat) + 12px) 16px 12px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.5px;
+}
+
+.countdown {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--primary-light);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  width: 0%;
+}
+
+.progress-label {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* ─── Day Navigation ─── */
+#dayNav {
+  display: flex;
+  align-items: center;
+  padding: 8px 8px;
+  gap: 4px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 80px; /* approximate header height */
+  z-index: 99;
+}
+
+.nav-arrow {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.nav-arrow:active { color: var(--primary); }
+
+.day-pills {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex: 1;
+  scroll-snap-type: x mandatory;
+}
+
+.day-pills::-webkit-scrollbar { display: none; }
+
+.day-pill {
+  min-width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  transition: all 0.2s;
+}
+
+.day-pill.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.day-pill.done {
+  border-color: var(--success);
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.day-pill.done.active {
+  background: var(--success);
+  color: white;
+}
+
+/* ─── Tabs ─── */
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ─── Content ─── */
+main {
+  padding: 0 0 16px;
+}
+
+.day-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 16px 16px 0;
+  color: var(--text);
+}
+
+.tab-content {
+  display: none;
+  padding: 12px 16px;
+  animation: fadeIn 0.2s ease;
+}
+
+.tab-content.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Legend ─── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.stress-demo {
+  font-weight: 800;
+  color: var(--accent);
+  font-size: 0.8rem;
+}
+
+.pause-demo {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.tone-down-demo { color: var(--success); font-weight: 700; }
+.tone-up-demo { color: #8b5cf6; font-weight: 700; }
+
+/* ─── Prosody Text ─── */
+.prosody-text {
+  font-family: "SF Mono", "Menlo", "Monaco", "Consolas", monospace;
+  font-size: 0.9rem;
+  line-height: 2;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Prosody inline styles */
+.stress {
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--accent-light);
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.pause-short {
+  color: var(--primary);
+  font-weight: 600;
+  opacity: 0.7;
+  margin: 0 2px;
+}
+
+.pause-long {
+  color: var(--primary);
+  font-weight: 700;
+  display: block;
+  margin: 4px 0;
+  opacity: 0.7;
+}
+
+.tone-down {
+  color: var(--success);
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.tone-up {
+  color: #8b5cf6;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.prosody-line {
+  margin-bottom: 2px;
+}
+
+/* ─── Practice Notes ─── */
+.practice-notes {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--accent-light);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.practice-notes strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent);
+}
+
+.practice-notes li {
+  margin-bottom: 4px;
+  margin-left: 16px;
+}
+
+/* ─── Plain Text ─── */
+.plain-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.plain-text .quote {
+  border-left: 3px solid var(--primary);
+  padding-left: 12px;
+  margin: 8px 0;
+  color: var(--text);
+}
+
+/* ─── Drill Card ─── */
+.drill-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.drill-card .drill-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.drill-card .drill-scenario {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+}
+
+.drill-card .drill-exercise {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ─── Daily Phrase ─── */
+.daily-phrase {
+  background: var(--primary-light);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.daily-phrase .phrase-label {
+  font-size: 0.75rem;
+  color: var(--primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.daily-phrase .phrase-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  font-style: italic;
+}
+
+/* ─── Instructions ─── */
+.instructions {
+  font-size: 0.9rem;
+  line-height: 1.8;
+  padding: 16px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.instructions ol, .instructions ul {
+  padding-left: 20px;
+}
+
+.instructions li {
+  margin-bottom: 8px;
+}
+
+.instructions .goal {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--success-light);
+  border-radius: 8px;
+  font-weight: 600;
+  color: #065f46;
+}
+
+/* ─── Tip Banner ─── */
+.tip-banner {
+  margin: 0 16px 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, var(--primary-light), #ede9fe);
+  border-radius: var(--radius);
+  font-size: 0.8rem;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.tip-banner::before {
+  content: "🎯 语音要点: ";
+  font-weight: 700;
+}
+
+/* ─── Action Bar ─── */
+#actionBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 10px 16px calc(10px + var(--sab));
+  z-index: 100;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.action-btn:active { transform: scale(0.95); }
+.action-btn:disabled { opacity: 0.3; pointer-events: none; }
+
+.btn-icon { font-size: 1.4rem; }
+.btn-label { font-size: 0.7rem; font-weight: 500; }
+
+.record-btn { color: var(--danger); }
+.record-btn.recording {
+  color: white;
+  background: var(--danger);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.play-btn { color: var(--primary); }
+
+.done-btn { color: var(--text-secondary); }
+.done-btn.completed {
+  color: var(--success);
+  background: var(--success-light);
+}
+
+/* ─── Responsive ─── */
+@media (min-width: 481px) {
+  #app { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  #actionBar { left: 50%; transform: translateX(-50%); }
+}
+
+/* ─── Touch feedback ─── */
+.tab:active, .day-pill:active { opacity: 0.7; }
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--primary-light);
+  color: var(--primary);
+}
