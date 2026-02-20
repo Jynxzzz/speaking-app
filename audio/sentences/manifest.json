@@ -1,0 +1,140 @@
+{
+  "30s_intro": {
+    "count": 6,
+    "sentences": [
+      "Hi, I'm Xingnan.",
+      "I'm finishing my PhD at Concordia University in Montreal.",
+      "My research is about autonomous driving.",
+      "I build AI models that predict where vehicles will go, and help self-driving cars understand their surroundings.",
+      "During the first three years of my PhD, I also worked with Ericsson through a Mitacs fellowship, where I built simulation environments for testing traffic safety.",
+      "I'm looking for opportunities in simulation, AI, or autonomous systems."
+    ]
+  },
+  "60s_intro": {
+    "count": 10,
+    "sentences": [
+      "Hi, I'm Xingnan.",
+      "I'm a PhD candidate at Concordia University, working towards finishing my degree this year.",
+      "My research focuses on making autonomous driving safer and smarter.",
+      "I work on two main problems.",
+      "First, trajectory prediction — teaching AI to predict where vehicles, cyclists, and pedestrians will move in the next few seconds.",
+      "Second, sensor fusion — combining cameras and LiDAR to detect objects even when they're partially hidden.",
+      "During the first three years of my PhD, I also worked at Ericsson's AI lab in Montreal through a Mitacs Accelerate fellowship.",
+      "There I built a co-simulation system that connects traffic simulation with 3D sensor simulation — basically a digital twin of urban intersections for safety testing.",
+      "I have one published paper and four more in preparation.",
+      "I'm excited about roles where I can apply simulation and AI to real-world systems."
+    ]
+  },
+  "2min_intro": {
+    "count": 16,
+    "sentences": [
+      "I'm Xingnan Zhou, a PhD candidate at Concordia University.",
+      "I'm working on finishing up my degree — hopefully this year.",
+      "I'm in the Civil Engineering department, but my work is really at the intersection of AI and transportation.",
+      "I've been at Concordia since 2019, so about seven years in Montreal now.",
+      "During the first three years of my PhD, from 2019 to 2022, I also worked at Ericsson's GAIA AI Hub through a Mitacs Accelerate fellowship.",
+      "My main project there was building a CARLA-VISSIM co-simulation framework — essentially connecting a driving simulator with a traffic simulator to create a digital twin of real intersections.",
+      "We used it to test safety scenarios that would be dangerous or impossible to test in real life.",
+      "After the Ericsson fellowship ended in 2022, I focused fully on my own research.",
+      "The core of it is trajectory prediction — building deep learning models that can forecast where vehicles will go based on their history and the road structure around them.",
+      "I use graph neural networks and Transformers for this, and I've tested my models on almost ninety thousand real-world driving scenarios from the Waymo dataset.",
+      "My best model improved prediction accuracy by twenty-seven percent compared to baselines.",
+      "I also work on sensor fusion — combining LiDAR 3D detection with camera-based detection to handle situations where objects are partially blocked.",
+      "And I built a tool called WayGraph that can match driving scenarios to real map intersections without GPS, using topology fingerprints.",
+      "That one achieved ninety percent accuracy.",
+      "What I'm looking for now is a role where I can apply this combination of simulation, perception, and AI to build systems that work in the real world.",
+      "I'm especially interested in digital twins, autonomous systems, and simulation platforms."
+    ]
+  },
+  "cae_intro": {
+    "count": 6,
+    "sentences": [
+      "Hi everyone, I'm Xingnan.",
+      "I'm a PhD candidate at Concordia University, in the final stage of my degree.",
+      "My research is in autonomous driving — trajectory prediction and sensor fusion.",
+      "I also have experience building digital twin environments through a co-simulation project at Ericsson.",
+      "I'm excited to explore how digital twin technologies apply across different domains, from ocean to space.",
+      "Looking forward to working with you all."
+    ]
+  },
+  "ericsson_pitch": {
+    "count": 3,
+    "sentences": [
+      "At Ericsson, I built a system that connects two simulators — CARLA, which is a 3D driving simulator with realistic sensors, and VISSIM, which simulates realistic traffic patterns.",
+      "By combining them, we created a digital twin of real intersections where you can test safety scenarios with realistic traffic and realistic sensor data at the same time.",
+      "We also deployed drones to capture real trajectory data at Montreal intersections."
+    ]
+  },
+  "lane_graph_pitch": {
+    "count": 5,
+    "sentences": [
+      "This is probably my best result.",
+      "I built a module that teaches prediction models to understand road structure — lane boundaries, connections, traffic rules.",
+      "It uses graph neural networks to encode the lane topology and cross-attention to inject that information into any prediction model.",
+      "On almost ninety thousand Waymo intersection scenarios, it improved prediction accuracy by about twenty-seven percent and reduced miss rate by about forty-three percent.",
+      "The key insight is that it works on both LSTM and Transformer architectures — it's architecture-agnostic."
+    ]
+  },
+  "attention_pitch": {
+    "count": 4,
+    "sentences": [
+      "I built a visualization tool to understand how Transformer models pay attention in trajectory prediction.",
+      "The surprising finding was that the model gives cyclists seventy-three percent less attention than vehicles.",
+      "That's a safety problem — the model is essentially ignoring vulnerable road users.",
+      "I also did counterfactual analysis, removing agents from scenes to see how predictions change, which helps us understand what the model actually relies on."
+    ]
+  },
+  "strength": {
+    "count": 4,
+    "sentences": [
+      "I'm good at connecting ideas across different fields.",
+      "My research spans simulation, deep learning, computer vision, and transportation — and I've had to teach myself most of these skills.",
+      "When I face a new problem, I can quickly survey the existing solutions, understand the trade-offs, and find an approach that works.",
+      "For example, my lane graph conditioning paper combined graph neural networks from one field with cross-attention from another to solve a trajectory prediction problem."
+    ]
+  },
+  "weakness": {
+    "count": 3,
+    "sentences": [
+      "I tend to be quiet in group settings, especially when I'm not sure my idea is fully formed.",
+      "I'm working on speaking up earlier, even if my thought isn't perfect yet.",
+      "I've realized that sharing an incomplete idea often moves the discussion forward more than staying silent."
+    ]
+  },
+  "challenging_project": {
+    "count": 5,
+    "sentences": [
+      "The CARLA-VISSIM co-simulation project at Ericsson was the most challenging.",
+      "I had to connect two completely different simulators — CARLA, which simulates 3D environments and sensors, and VISSIM, which simulates traffic flow.",
+      "They weren't designed to work together, so I had to build the bridge from scratch — synchronizing time steps, coordinate systems, vehicle states.",
+      "The hardest part was making the simulated traffic behave realistically while maintaining sensor accuracy.",
+      "It took months of debugging, but the result was a working digital twin that the team used for safety evaluation."
+    ]
+  },
+  "comm_report": {
+    "count": 4,
+    "sentences": [
+      "So this week I focused on digital twin technologies in the autonomous driving space.",
+      "I reviewed three papers and found three main approaches.",
+      "The main takeaway is that the trend is moving towards hybrid systems.",
+      "I can share the details in the document."
+    ]
+  },
+  "comm_disagree": {
+    "count": 4,
+    "sentences": [
+      "That's interesting.",
+      "I've seen a slightly different perspective in the literature.",
+      "Some researchers argue that data-driven approaches are more scalable than physics-based methods.",
+      "It might be worth considering both sides."
+    ]
+  },
+  "comm_stuck": {
+    "count": 3,
+    "sentences": [
+      "Let me think about how to say this.",
+      "I know what I want to say but I'm struggling with the words.",
+      "Basically, the model isn't just bad at predicting cyclists — it's actively ignoring them."
+    ]
+  }
+}
