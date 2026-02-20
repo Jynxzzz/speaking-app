@@ -217,6 +217,13 @@ function renderDay(dayNum) {
   const playBtn = document.getElementById('playBtn');
   playBtn.disabled = !recordings[dayNum];
 
+  // Show/hide native recording player
+  if (recordings[dayNum]) {
+    showRecPlayer(recordings[dayNum]);
+  } else {
+    hideRecPlayer();
+  }
+
   // Update progress bar
   updateProgressBar();
 
@@ -340,6 +347,9 @@ async function toggleRecording() {
       recordings[currentDay] = url;
       document.getElementById('playBtn').disabled = false;
 
+      // Show native player with recording immediately
+      showRecPlayer(url);
+
       // Save recording to IndexedDB for persistence
       saveRecordingToDB(currentDay, blob);
 
@@ -367,68 +377,33 @@ function playRecording() {
   const url = recordings[currentDay];
   if (!url) return;
 
-  const playBtn = document.getElementById('playBtn');
+  // Always use the native <audio> element in the DOM — most reliable on iOS
+  const player = document.getElementById('recPlayer');
+  const wrap = document.getElementById('recPlayerWrap');
 
-  // Stop any currently playing recording
-  if (window._currentPlayback) {
-    window._currentPlayback.pause();
-    window._currentPlayback = null;
-    playBtn.querySelector('.btn-label').textContent = '回放';
-    playBtn.classList.remove('playing-rec');
-    return;
-  }
+  player.src = url;
+  wrap.style.display = 'block';
 
-  const audio = new Audio();
-  audio.src = url;
+  // Scroll to make player visible
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-  audio.onplay = () => {
-    playBtn.querySelector('.btn-label').textContent = '停止';
-    playBtn.classList.add('playing-rec');
-    window._currentPlayback = audio;
-  };
-
-  audio.onended = () => {
-    playBtn.querySelector('.btn-label').textContent = '回放';
-    playBtn.classList.remove('playing-rec');
-    window._currentPlayback = null;
-  };
-
-  audio.onerror = (e) => {
-    console.error('Playback error:', e);
-    playBtn.querySelector('.btn-label').textContent = '回放';
-    playBtn.classList.remove('playing-rec');
-    window._currentPlayback = null;
-    // Try alternative approach for iOS
-    tryAlternativePlayback(url);
-  };
-
-  audio.play().catch(err => {
-    console.error('Play failed:', err);
-    tryAlternativePlayback(url);
+  player.play().catch(() => {
+    // If autoplay fails, user can tap the native controls
   });
 }
 
-function tryAlternativePlayback(url) {
-  // iOS Safari sometimes needs the audio element in the DOM
-  let audioEl = document.getElementById('hiddenAudio');
-  if (!audioEl) {
-    audioEl = document.createElement('audio');
-    audioEl.id = 'hiddenAudio';
-    audioEl.setAttribute('playsinline', '');
-    audioEl.setAttribute('controls', '');
-    audioEl.style.cssText = 'position:fixed;bottom:80px;left:16px;right:16px;z-index:999;';
-    document.body.appendChild(audioEl);
+function showRecPlayer(url) {
+  const player = document.getElementById('recPlayer');
+  const wrap = document.getElementById('recPlayerWrap');
+  if (player && url) {
+    player.src = url;
+    wrap.style.display = 'block';
   }
-  audioEl.src = url;
-  audioEl.style.display = 'block';
-  audioEl.play().catch(() => {
-    // Show native controls as last resort
-    audioEl.style.display = 'block';
-  });
+}
 
-  audioEl.onended = () => {
-    audioEl.style.display = 'none';
-  };
+function hideRecPlayer() {
+  const wrap = document.getElementById('recPlayerWrap');
+  if (wrap) wrap.style.display = 'none';
 }
 
 // ─── IndexedDB for Recording Persistence ───
@@ -564,38 +539,45 @@ function toggleTTS(text) {
     return;
   }
 
-  // Try pre-generated audio first
+  // Use pre-generated MP3 audio (Edge TTS Emma voice, consistent volume)
   const day = CURRICULUM[currentDay - 1];
   const audioPath = `./audio/${day.prosodyKey}.mp3`;
 
-  // Check if audio file exists by trying to fetch it
-  const audio = new Audio(audioPath);
-  audio.playbackRate = getTTSRate();
+  // Use a DOM audio element for iOS compatibility
+  let ttsEl = document.getElementById('ttsAudioEl');
+  if (!ttsEl) {
+    ttsEl = document.createElement('audio');
+    ttsEl.id = 'ttsAudioEl';
+    ttsEl.setAttribute('playsinline', '');
+    ttsEl.preload = 'auto';
+    document.body.appendChild(ttsEl);
+  }
 
-  audio.addEventListener('canplaythrough', () => {
-    // Pre-generated audio exists, use it
-    ttsAudio = audio;
+  ttsEl.src = audioPath;
+  ttsEl.playbackRate = getTTSRate();
+
+  ttsEl.oncanplaythrough = () => {
+    ttsAudio = ttsEl;
     isTTSPlaying = true;
     updateTTSButtonState(true);
-    audio.play();
-  }, { once: true });
+    ttsEl.play().catch(() => {
+      // If MP3 fails, fall back to browser TTS
+      playBrowserTTS(text);
+    });
+  };
 
-  audio.addEventListener('error', () => {
+  ttsEl.onerror = () => {
     // No pre-generated audio, fall back to browser TTS
     playBrowserTTS(text);
-  }, { once: true });
+  };
 
-  audio.addEventListener('ended', () => {
+  ttsEl.onended = () => {
     isTTSPlaying = false;
     updateTTSButtonState(false);
-  });
+  };
 
-  // Set a timeout - if audio doesn't load in 1 second, use browser TTS
-  setTimeout(() => {
-    if (!isTTSPlaying) {
-      playBrowserTTS(text);
-    }
-  }, 1000);
+  // Trigger load
+  ttsEl.load();
 }
 
 function playBrowserTTS(text) {
