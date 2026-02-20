@@ -735,24 +735,48 @@ function playSentence(index) {
   const sentence = sentenceMode.sentences[index];
   if (!sentence) return;
 
-  // Use browser TTS for individual sentences (more responsive than loading audio)
-  if ('speechSynthesis' in window) {
-    speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(sentence);
-    utterance.rate = getTTSRate();
-    utterance.lang = 'en-US';
+  // Use pre-generated Edge TTS audio for each sentence
+  const day = CURRICULUM[currentDay - 1];
+  const audioPath = `./audio/sentences/${day.prosodyKey}_${index}.mp3`;
 
-    const voices = speechSynthesis.getVoices();
-    const preferred = voices.find(v =>
-      v.name.includes('Samantha') ||
-      v.name.includes('Karen') ||
-      v.name.includes('Google US English') ||
-      (v.lang === 'en-US' && v.name.includes('Female'))
-    ) || voices.find(v => v.lang.startsWith('en-'));
-    if (preferred) utterance.voice = preferred;
-
-    speechSynthesis.speak(utterance);
+  let sentAudio = document.getElementById('sentenceAudioEl');
+  if (!sentAudio) {
+    sentAudio = document.createElement('audio');
+    sentAudio.id = 'sentenceAudioEl';
+    sentAudio.setAttribute('playsinline', '');
+    sentAudio.preload = 'auto';
+    document.body.appendChild(sentAudio);
   }
+
+  sentAudio.src = audioPath;
+  sentAudio.playbackRate = getTTSRate();
+  sentAudio.load();
+
+  sentAudio.oncanplaythrough = () => {
+    sentAudio.play().catch(() => {
+      // Fallback to browser TTS if audio file not found
+      fallbackBrowserTTS(sentence);
+    });
+  };
+
+  sentAudio.onerror = () => {
+    fallbackBrowserTTS(sentence);
+  };
+}
+
+function fallbackBrowserTTS(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = getTTSRate();
+  utterance.lang = 'en-US';
+  const voices = speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    v.name.includes('Samantha') || v.name.includes('Google US English') ||
+    (v.lang === 'en-US')
+  ) || voices.find(v => v.lang.startsWith('en-'));
+  if (preferred) utterance.voice = preferred;
+  speechSynthesis.speak(utterance);
 }
 
 function removeSentenceUI() {
