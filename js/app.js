@@ -294,10 +294,38 @@ async function toggleRecording() {
     return;
   }
 
+  // Stop TTS if playing (avoid echo interference)
+  if (isTTSPlaying) {
+    stopTTS();
+  }
+
   // Start recording
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
+    // Disable echo cancellation & AGC to prevent TTS volume fluctuation
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      }
+    });
+
+    // Detect supported audio format (iOS Safari doesn't support webm)
+    let mimeType = '';
+    if (typeof MediaRecorder.isTypeSupported === 'function') {
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+        mimeType = 'audio/aac';
+      }
+    }
+
+    const recorderOptions = mimeType ? { mimeType } : {};
+    mediaRecorder = new MediaRecorder(stream, recorderOptions);
     audioChunks = [];
 
     mediaRecorder.ondataavailable = (e) => {
@@ -305,7 +333,9 @@ async function toggleRecording() {
     };
 
     mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
+      // Use the actual MIME type from the recorder
+      const actualType = mediaRecorder.mimeType || mimeType || 'audio/mp4';
+      const blob = new Blob(audioChunks, { type: actualType });
       const url = URL.createObjectURL(blob);
       recordings[currentDay] = url;
       document.getElementById('playBtn').disabled = false;
@@ -336,8 +366,69 @@ async function toggleRecording() {
 function playRecording() {
   const url = recordings[currentDay];
   if (!url) return;
-  const audio = new Audio(url);
-  audio.play();
+
+  const playBtn = document.getElementById('playBtn');
+
+  // Stop any currently playing recording
+  if (window._currentPlayback) {
+    window._currentPlayback.pause();
+    window._currentPlayback = null;
+    playBtn.querySelector('.btn-label').textContent = '回放';
+    playBtn.classList.remove('playing-rec');
+    return;
+  }
+
+  const audio = new Audio();
+  audio.src = url;
+
+  audio.onplay = () => {
+    playBtn.querySelector('.btn-label').textContent = '停止';
+    playBtn.classList.add('playing-rec');
+    window._currentPlayback = audio;
+  };
+
+  audio.onended = () => {
+    playBtn.querySelector('.btn-label').textContent = '回放';
+    playBtn.classList.remove('playing-rec');
+    window._currentPlayback = null;
+  };
+
+  audio.onerror = (e) => {
+    console.error('Playback error:', e);
+    playBtn.querySelector('.btn-label').textContent = '回放';
+    playBtn.classList.remove('playing-rec');
+    window._currentPlayback = null;
+    // Try alternative approach for iOS
+    tryAlternativePlayback(url);
+  };
+
+  audio.play().catch(err => {
+    console.error('Play failed:', err);
+    tryAlternativePlayback(url);
+  });
+}
+
+function tryAlternativePlayback(url) {
+  // iOS Safari sometimes needs the audio element in the DOM
+  let audioEl = document.getElementById('hiddenAudio');
+  if (!audioEl) {
+    audioEl = document.createElement('audio');
+    audioEl.id = 'hiddenAudio';
+    audioEl.setAttribute('playsinline', '');
+    audioEl.setAttribute('controls', '');
+    audioEl.style.cssText = 'position:fixed;bottom:80px;left:16px;right:16px;z-index:999;';
+    document.body.appendChild(audioEl);
+  }
+  audioEl.src = url;
+  audioEl.style.display = 'block';
+  audioEl.play().catch(() => {
+    // Show native controls as last resort
+    audioEl.style.display = 'block';
+  });
+
+  audioEl.onended = () => {
+    audioEl.style.display = 'none';
+  };
 }
 
 // ─── IndexedDB for Recording Persistence ───
@@ -417,21 +508,30 @@ function updateTTSButton(dayNum) {
 
   ttsContainer.innerHTML = `
     <div class="tts-bar">
-      <button class="tts-btn" id="ttsPlayBtn" title="影子跟读">
+      <button class="tts-btn" id="ttsPlayBtn" title="影子跟读 - 整段播放">
         <span class="tts-icon">🔊</span>
         <span>影子跟读</span>
       </button>
+      <button class="tts-btn tts-btn-secondary" id="ttsSentenceBtn" title="逐句模式 - 播一句停一句">
+        <span class="tts-icon">📖</span>
+        <span>逐句</span>
+      </button>
       <div class="tts-speed">
-        <button class="speed-btn ${getTTSRate() === 0.7 ? 'active' : ''}" data-rate="0.7">慢速</button>
-        <button class="speed-btn ${getTTSRate() === 0.85 ? 'active' : ''}" data-rate="0.85">中速</button>
-        <button class="speed-btn ${getTTSRate() === 1.0 ? 'active' : ''}" data-rate="1.0">正常</button>
+        <button class="speed-btn ${getTTSRate() === 0.7 ? 'active' : ''}" data-rate="0.7">慢</button>
+        <button class="speed-btn ${getTTSRate() === 0.85 ? 'active' : ''}" data-rate="0.85">中</button>
+        <button class="speed-btn ${getTTSRate() === 1.0 ? 'active' : ''}" data-rate="1.0">快</button>
       </div>
     </div>
   `;
 
-  // TTS play button
+  // TTS play button (full playback)
   document.getElementById('ttsPlayBtn').addEventListener('click', () => {
     toggleTTS(prosodyData.plain);
+  });
+
+  // Sentence-by-sentence mode
+  document.getElementById('ttsSentenceBtn').addEventListener('click', () => {
+    toggleSentenceTTS(prosodyData.plain);
   });
 
   // Speed buttons
@@ -581,6 +681,102 @@ function updateTTSButtonState(playing) {
     btn.innerHTML = '<span class="tts-icon">🔊</span><span>影子跟读</span>';
     btn.classList.remove('playing');
   }
+}
+
+// ─── Sentence-by-Sentence TTS ───
+// Plays one sentence, waits for user to tap "next", then plays the next
+let sentenceMode = { active: false, sentences: [], index: 0 };
+
+function toggleSentenceTTS(text) {
+  if (sentenceMode.active) {
+    sentenceMode.active = false;
+    stopTTS();
+    removeSentenceUI();
+    return;
+  }
+
+  const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim());
+  if (!sentences.length) return;
+
+  sentenceMode = { active: true, sentences, index: 0 };
+  showSentenceUI();
+  playSentence(0);
+}
+
+function showSentenceUI() {
+  let ui = document.getElementById('sentenceUI');
+  if (!ui) {
+    ui = document.createElement('div');
+    ui.id = 'sentenceUI';
+    ui.className = 'sentence-ui';
+    const prosodyTab = document.getElementById('tab-prosody');
+    const prosodyText = document.getElementById('prosodyText');
+    prosodyTab.insertBefore(ui, prosodyText);
+  }
+  updateSentenceUI();
+}
+
+function updateSentenceUI() {
+  const ui = document.getElementById('sentenceUI');
+  if (!ui || !sentenceMode.active) return;
+
+  const { sentences, index } = sentenceMode;
+  const progress = `${index + 1}/${sentences.length}`;
+
+  ui.innerHTML = `
+    <div class="sentence-current">${sentences[index]}</div>
+    <div class="sentence-controls">
+      <span class="sentence-progress">${progress}</span>
+      <button class="sentence-replay" id="sentenceReplay">🔄 再听一遍</button>
+      <button class="sentence-next" id="sentenceNext">${index < sentences.length - 1 ? '下一句 ➜' : '✅ 完成'}</button>
+    </div>
+    <div class="sentence-hint">先听，然后自己说一遍，再点下一句</div>
+  `;
+
+  document.getElementById('sentenceReplay').addEventListener('click', () => {
+    playSentence(sentenceMode.index);
+  });
+
+  document.getElementById('sentenceNext').addEventListener('click', () => {
+    if (sentenceMode.index < sentences.length - 1) {
+      sentenceMode.index++;
+      updateSentenceUI();
+      playSentence(sentenceMode.index);
+    } else {
+      sentenceMode.active = false;
+      removeSentenceUI();
+    }
+  });
+}
+
+function playSentence(index) {
+  const sentence = sentenceMode.sentences[index];
+  if (!sentence) return;
+
+  // Use browser TTS for individual sentences (more responsive than loading audio)
+  if ('speechSynthesis' in window) {
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    utterance.rate = getTTSRate();
+    utterance.lang = 'en-US';
+
+    const voices = speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Samantha') ||
+      v.name.includes('Karen') ||
+      v.name.includes('Google US English') ||
+      (v.lang === 'en-US' && v.name.includes('Female'))
+    ) || voices.find(v => v.lang.startsWith('en-'));
+    if (preferred) utterance.voice = preferred;
+
+    speechSynthesis.speak(utterance);
+  }
+}
+
+function removeSentenceUI() {
+  const ui = document.getElementById('sentenceUI');
+  if (ui) ui.remove();
+  stopTTS();
 }
 
 // ─── Speech Recognition for Pronunciation Comparison ───
@@ -797,19 +993,71 @@ dynamicStyles.textContent = `
     display: flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     border: none;
     background: var(--primary);
     color: white;
     border-radius: 8px;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s;
   }
+  .tts-btn-secondary {
+    background: #7c3aed;
+  }
   .tts-btn:active { transform: scale(0.97); }
   .tts-btn.playing { background: var(--danger); }
+  .playing-rec { color: var(--success) !important; }
+
+  .sentence-ui {
+    background: linear-gradient(135deg, #ede9fe, #dbeafe);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .sentence-current {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+  .sentence-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sentence-progress {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .sentence-replay, .sentence-next {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .sentence-replay {
+    background: var(--bg);
+    color: var(--text-secondary);
+  }
+  .sentence-next {
+    background: var(--primary);
+    color: white;
+    margin-left: auto;
+  }
+  .sentence-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    font-style: italic;
+  }
   .tts-icon { font-size: 1rem; }
   .tts-speed {
     display: flex;
