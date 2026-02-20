@@ -2,7 +2,7 @@
   "name": "SpeakUp - English Speaking Practice",
   "short_name": "SpeakUp",
   "description": "18-day English speaking practice for job interviews",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#1e293b",
