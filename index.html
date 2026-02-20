@@ -74,6 +74,13 @@
     <!-- Prosody Tip Banner -->
     <div class="tip-banner" id="tipBanner"></div>
 
+    <!-- Recording Playback (native audio element for iOS compatibility) -->
+    <div id="recPlayerWrap" style="display:none; padding: 8px 16px;">
+      <div style="font-size:0.75rem; color:#64748b; margin-bottom:4px;">录音回放:</div>
+      <audio id="recPlayer" controls playsinline preload="auto"
+        style="width:100%; height:40px; border-radius:8px;"></audio>
+    </div>
+
     <!-- Bottom Action Bar -->
     <footer id="actionBar">
       <button class="action-btn record-btn" id="recordBtn">
