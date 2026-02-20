@@ -466,7 +466,7 @@ function toggleTTS(text) {
 
   // Try pre-generated audio first
   const day = CURRICULUM[currentDay - 1];
-  const audioPath = `audio/${day.prosodyKey}.mp3`;
+  const audioPath = `./audio/${day.prosodyKey}.mp3`;
 
   // Check if audio file exists by trying to fetch it
   const audio = new Audio(audioPath);
