@@ -31,10 +31,10 @@ function detectToday() {
   const start = new Date(START_DATE);
   start.setHours(0, 0, 0, 0);
   const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1;
-  if (diff >= 1 && diff <= 18) {
+  if (diff >= 1 && diff <= CURRICULUM.length) {
     currentDay = diff;
-  } else if (diff > 18) {
-    currentDay = 18;
+  } else if (diff > CURRICULUM.length) {
+    currentDay = CURRICULUM.length;
   } else {
     currentDay = 1;
   }
@@ -73,7 +73,7 @@ function getCompletedCount() {
 function renderDayPills() {
   const container = document.getElementById('dayPills');
   container.innerHTML = '';
-  for (let i = 1; i <= 18; i++) {
+  for (let i = 1; i <= CURRICULUM.length; i++) {
     const pill = document.createElement('button');
     pill.className = 'day-pill';
     pill.textContent = i;
@@ -103,7 +103,7 @@ function setupNavigation() {
     }
   });
   document.getElementById('nextDay').addEventListener('click', () => {
-    if (currentDay < 18) {
+    if (currentDay < CURRICULUM.length) {
       currentDay++;
       renderDayPills();
       renderDay(currentDay);
@@ -117,7 +117,7 @@ function setupNavigation() {
   content.addEventListener('touchend', e => {
     const diff = touchStartX - e.changedTouches[0].clientX;
     if (Math.abs(diff) > 60) {
-      if (diff > 0 && currentDay < 18) { currentDay++; }
+      if (diff > 0 && currentDay < CURRICULUM.length) { currentDay++; }
       else if (diff < 0 && currentDay > 1) { currentDay--; }
       else return;
       renderDayPills();
@@ -266,9 +266,10 @@ function escapeHTML(str) {
 // ─── Progress Bar ───
 function updateProgressBar() {
   const completed = getCompletedCount();
-  const pct = Math.round((completed / 18) * 100);
+  const total = CURRICULUM.length;
+  const pct = Math.round((completed / total) * 100);
   document.getElementById('progressFill').style.width = `${pct}%`;
-  document.getElementById('progressLabel').textContent = `${completed}/18 天完成 (${pct}%)`;
+  document.getElementById('progressLabel').textContent = `${completed}/${total} 天完成 (${pct}%)`;
 }
 
 // ─── Actions: Record, Play, Done ───
@@ -452,7 +453,7 @@ async function loadRecordingFromDB(dayNum) {
 
 // Load all saved recordings on init
 (async function loadAllRecordings() {
-  for (let i = 1; i <= 18; i++) {
+  for (let i = 1; i <= CURRICULUM.length; i++) {
     await loadRecordingFromDB(i);
   }
   // Re-render to update play button state
